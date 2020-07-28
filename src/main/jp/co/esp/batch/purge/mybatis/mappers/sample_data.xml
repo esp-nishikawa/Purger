@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="jp.co.esp.batch.purge.mybatis.mappers.sample_data">
+
+	<!-- DTO -->
+	<resultMap id="SampleDataDto" type="jp.co.esp.batch.purge.dto.SampleDataDto">
+		<result property="dataId"			column="DATA_ID"/>
+		<result property="message"			column="MESSAGE"/>
+		<result property="createUser"		column="CREATE_USER"/>
+		<result property="createDt"			column="CREATE_DT"/>
+		<result property="updateUser"		column="UPDATE_USER"/>
+		<result property="updateDt"			column="UPDATE_DT"/>
+	</resultMap>
+
+	<!-- 保持期間を過ぎたデータを取得 -->
+	<select id="select" resultMap="SampleDataDto">
+		SELECT
+			DATA_ID,
+			MESSAGE,
+			CREATE_USER,
+			CREATE_DT,
+			UPDATE_USER,
+			UPDATE_DT
+		FROM
+			SAMPLE_DATA
+		<where>
+			<if test="period != null">
+				<![CDATA[
+				UPDATE_DT < TRUNC(SYSDATE - #{period})
+				]]>
+			</if>
+			<if test="date != null">
+				<![CDATA[
+				AND UPDATE_DT < #{date}
+				]]>
+			</if>
+		</where>
+		ORDER BY
+			DATA_ID
+	</select>
+
+	<!-- データを削除 -->
+	<delete id="delete" parameterType="hashmap">
+		DELETE
+		FROM
+			SAMPLE_DATA
+		WHERE
+			DATA_ID IN
+			<foreach item="dataId" collection="dataIdList" open="(" separator="," close=")">
+				#{dataId}
+			</foreach>
+	</delete>
+
+	<!-- データを登録 -->
+	<insert id="insert" parameterType="hashmap">
+		INSERT INTO
+			SAMPLE_DATA
+		(
+			DATA_ID,
+			MESSAGE,
+			CREATE_USER,
+			CREATE_DT,
+			UPDATE_USER,
+			UPDATE_DT
+		)
+		VALUES
+		(
+			#{dataId},
+			#{message, jdbcType=VARCHAR},
+			#{userId},
+			SYSDATE,
+			#{userId},
+			SYSDATE
+		)
+	</insert>
+</mapper>

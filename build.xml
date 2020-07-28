@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="Purger" default="all" basedir=".">
+
+    <!-- ファイルバージョン -->
+    <property name="spec.version" value="1.0"/>
+
+    <!-- ビルドバージョン -->
+    <macrodef name="init-version">
+        <sequential>
+            <tstamp>
+                <format property="build.datetime" pattern="yyyy.MM.dd_HH.mm.ss"/>
+            </tstamp>
+        </sequential>
+    </macrodef>
+
+    <!-- ディレクトリ -->
+    <property name="dir.classes" value="classes" />
+    <property name="dir.jars" value="jars" />
+    <property name="dir.lib" value="lib" />
+    <property name="dir.src" value="src/main" />
+
+    <!-- 環境変数チェック -->
+    <property environment="env"/>
+    <fail unless="env.JAVA_HOME" message="環境変数 JAVA_HOME を定義してください。"/>
+
+    <!-- デフォルト -->
+    <target name="all" depends="clean,build" />
+
+    <!-- ビルド -->
+    <target name="build">
+        <mkdir dir="${dir.classes}" />
+        <javac srcdir="${dir.src}" destdir="${dir.classes}"
+               debug="on" debuglevel="source,lines,vars"
+               optimize="off" deprecation="on" encoding="UTF-8">
+            <compilerarg value="-Xlint:unchecked" />
+            <include name="jp/co/esp/batch/purge/**" />
+            <classpath>
+                <fileset dir="${dir.lib}">
+                    <include name="log4j-1.2.17.jar" />
+                    <include name="mybatis-3.5.5.jar" />
+                </fileset>
+            </classpath>
+        </javac>
+        <copy todir="${dir.classes}">
+            <fileset dir="${dir.src}">
+                <include name="**/*.xml" />
+                <include name="**/*.properties" />
+            </fileset>
+        </copy>
+        <init-version/>
+        <mkdir dir="${dir.jars}" />
+        <jar jarfile="${dir.jars}/purger.jar" basedir="${dir.classes}">
+            <manifest>
+                <attribute name="Specification-Version" value="${spec.version}"/>
+                <attribute name="Implementation-Version" value="${build.datetime}"/>
+                <attribute name="Main-Class" value="jp.co.esp.batch.purge.PurgerMain"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <!-- ビルド成果物の削除 -->
+    <target name="clean">
+        <delete dir="${dir.jars}" />
+        <delete dir="${dir.classes}" />
+    </target>
+
+</project>
